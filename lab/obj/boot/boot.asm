@@ -62,7 +62,7 @@ seta20.2:
   # and segment translation that makes virtual addresses 
   # identical to their physical addresses, so that the 
   # effective memory map does not change during the switch.
-  lgdt    gdtdesc  # gdtdesc address =  0x7c64
+  lgdt    gdtdesc
     7c1e:	0f 01 16             	lgdtl  (%esi)
     7c21:	64                   	fs
     7c22:	7c 0f                	jl     7c33 <protcseg+0x1>
@@ -97,9 +97,9 @@ protcseg:
     7c3e:	8e d0                	mov    %eax,%ss
   
   # Set up the stack pointer and call into C.
-  movl    $start, %esp #start address is:0x7c00
+  movl    $start, %esp
     7c40:	bc 00 7c 00 00       	mov    $0x7c00,%esp
-  call bootmain    # bootmain() address: 0x7d08
+  call bootmain
     7c45:	e8 be 00 00 00       	call   7d08 <bootmain>
 
 00007c4a <spin>:
@@ -131,11 +131,11 @@ waitdisk(void)
 {
     7c6a:	55                   	push   %ebp
 
-static __inline uint8_t
+static inline uint8_t
 inb(int port)
 {
 	uint8_t data;
-	__asm __volatile("inb %w1,%0" : "=a" (data) : "d" (port));
+	asm volatile("inb %w1,%0" : "=a" (data) : "d" (port));
     7c6b:	ba f7 01 00 00       	mov    $0x1f7,%edx
     7c70:	89 e5                	mov    %esp,%ebp
     7c72:	ec                   	in     (%dx),%al
@@ -164,10 +164,10 @@ readsect(void *dst, uint32_t offset)
     7c84:	e8 e1 ff ff ff       	call   7c6a <waitdisk>
 }
 
-static __inline void
+static inline void
 outb(int port, uint8_t data)
 {
-	__asm __volatile("outb %0,%w1" : : "a" (data), "d" (port));
+	asm volatile("outb %0,%w1" : : "a" (data), "d" (port));
     7c89:	ba f2 01 00 00       	mov    $0x1f2,%edx
     7c8e:	b0 01                	mov    $0x1,%al
     7c90:	ee                   	out    %al,(%dx)
@@ -203,10 +203,10 @@ outb(int port, uint8_t data)
     7cb6:	e8 af ff ff ff       	call   7c6a <waitdisk>
 }
 
-static __inline void
+static inline void
 insl(int port, void *addr, int cnt)
 {
-	__asm __volatile("cld\n\trepne\n\tinsl"			:
+	asm volatile("cld\n\trepne\n\tinsl"
     7cbb:	8b 7d 08             	mov    0x8(%ebp),%edi
     7cbe:	b9 80 00 00 00       	mov    $0x80,%ecx
     7cc3:	ba f0 01 00 00       	mov    $0x1f0,%edx
@@ -379,7 +379,7 @@ bootmain(void)
     7d46:	73 16                	jae    7d5e <bootmain+0x56>
 		// p_pa is the load address of this segment (as well
 		// as the physical address)
-		readseg(ph->p_pa, ph->p_memsz, ph->p_offset);  //ph->p_pa = 0x100000 (1MB)
+		readseg(ph->p_pa, ph->p_memsz, ph->p_offset);
     7d48:	ff 73 04             	pushl  0x4(%ebx)
     7d4b:	ff 73 14             	pushl  0x14(%ebx)
 		goto bad;
@@ -391,7 +391,7 @@ bootmain(void)
     7d4e:	83 c3 20             	add    $0x20,%ebx
 		// p_pa is the load address of this segment (as well
 		// as the physical address)
-		readseg(ph->p_pa, ph->p_memsz, ph->p_offset);  //ph->p_pa = 0x100000 (1MB)
+		readseg(ph->p_pa, ph->p_memsz, ph->p_offset);
     7d51:	ff 73 ec             	pushl  -0x14(%ebx)
     7d54:	e8 76 ff ff ff       	call   7ccf <readseg>
 		goto bad;
@@ -403,7 +403,7 @@ bootmain(void)
     7d59:	83 c4 0c             	add    $0xc,%esp
     7d5c:	eb e6                	jmp    7d44 <bootmain+0x3c>
 		// as the physical address)
-		readseg(ph->p_pa, ph->p_memsz, ph->p_offset);  //ph->p_pa = 0x100000 (1MB)
+		readseg(ph->p_pa, ph->p_memsz, ph->p_offset);
 
 	// call the entry point from the ELF header
 	// note: does not return!
@@ -411,10 +411,10 @@ bootmain(void)
     7d5e:	ff 15 18 00 01 00    	call   *0x10018
 }
 
-static __inline void
+static inline void
 outw(int port, uint16_t data)
 {
-	__asm __volatile("outw %0,%w1" : : "a" (data), "d" (port));
+	asm volatile("outw %0,%w1" : : "a" (data), "d" (port));
     7d64:	ba 00 8a 00 00       	mov    $0x8a00,%edx
     7d69:	b8 00 8a ff ff       	mov    $0xffff8a00,%eax
     7d6e:	66 ef                	out    %ax,(%dx)
