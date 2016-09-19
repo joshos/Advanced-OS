@@ -49,9 +49,9 @@ endif
 
 # try to infer the correct QEMU
 ifndef QEMU
-QEMU := $(shell if which qemu >/dev/null 2>&1; \
+QEMU := $(shell if which qemu > /dev/null; \
 	then echo qemu; exit; \
-        elif which qemu-system-i386 >/dev/null 2>&1; \
+        elif which qemu-system-i386 > /dev/null; \
         then echo qemu-system-i386; exit; \
 	else \
 	qemu=/Applications/Q.app/Contents/MacOS/i386-softmmu.app/Contents/MacOS/i386-softmmu; \
@@ -137,7 +137,7 @@ include boot/Makefrag
 include kern/Makefrag
 
 
-QEMUOPTS = -drive file=$(OBJDIR)/kern/kernel.img,index=0,media=disk,format=raw -serial mon:stdio -gdb tcp::$(GDBPORT)
+QEMUOPTS = -hda $(OBJDIR)/kern/kernel.img -serial mon:stdio -gdb tcp::$(GDBPORT)
 QEMUOPTS += $(shell if $(QEMU) -nographic -help | grep -q '^-D '; then echo '-D qemu.log'; fi)
 IMAGES = $(OBJDIR)/kern/kernel.img
 QEMUOPTS += $(QEMUEXTRA)
@@ -217,12 +217,10 @@ git-handin: handin-check
 		false; \
 	fi
 
-WEBSUB := https://6828.scripts.mit.edu/2016/handin.py
+WEBSUB = https://ccutler.scripts.mit.edu/6.828/handin.py
 
 handin: tarball-pref myapi.key
-	@SUF=$(LAB); \
-	test -f .suf && SUF=`cat .suf`; \
-	curl -f -F file=@lab$$SUF-handin.tar.gz -F key=\<myapi.key $(WEBSUB)/upload \
+	@curl -f -F file=@lab$(LAB)-handin.tar.gz -F key=\<myapi.key $(WEBSUB)/upload \
 	    > /dev/null || { \
 		echo ; \
 		echo Submit seems to have failed.; \
@@ -250,35 +248,11 @@ handin-check:
 		test "$$r" = y; \
 	fi
 
-UPSTREAM := $(shell git remote -v | grep "pdos.csail.mit.edu/6.828/2016/jos.git (fetch)" | awk '{split($$0,a," "); print a[1]}')
-
 tarball: handin-check
-	git archive --format=tar HEAD > lab$(LAB)-handin.tar
-	git diff $(UPSTREAM)/lab$(LAB) > /tmp/lab$(LAB)diff.patch
-	tar -rf lab$(LAB)-handin.tar /tmp/lab$(LAB)diff.patch
-	gzip lab$(LAB)-handin.tar > lab$(LAB)-handin.tar.gz
-	rm /tmp/lab$(LAB)diff.patch
+	git archive --format=tar HEAD | gzip > lab$(LAB)-handin.tar.gz
 
 tarball-pref: handin-check
-	@SUF=$(LAB); \
-	if test $(LAB) -eq 3 -o $(LAB) -eq 4; then \
-		read -p "Which part would you like to submit? [a, b, c (lab 4 only)]" p; \
-		if test "$$p" != a -a "$$p" != b; then \
-			if test ! $(LAB) -eq 4 -o ! "$$p" = c; then \
-				echo "Bad part \"$$p\""; \
-				exit 1; \
-			fi; \
-		fi; \
-		SUF="$(LAB)$$p"; \
-		echo $$SUF > .suf; \
-	else \
-		rm -f .suf; \
-	fi; \
-	git archive --format=tar HEAD > lab$(LAB)-handin.tar
-	git diff $(UPSTREAM)/lab$(LAB) > /tmp/lab$(LAB)diff.patch
-	tar -rf lab$(LAB)-handin.tar /tmp/lab$(LAB)diff.patch
-	gzip lab$(LAB)-handin.tar > lab$(LAB)-handin.tar.gz
-	rm /tmp/lab$(LAB)diff.patch
+	git archive --prefix=lab$(LAB)/ --format=tar HEAD | gzip > lab$(LAB)-handin.tar.gz
 
 myapi.key:
 	@echo Get an API key for yourself by visiting $(WEBSUB)
@@ -298,8 +272,8 @@ myapi.key:
 		false; \
 	fi;
 
-#handin-prep:
-#	@./handin-prep
+handin-prep:
+	@./handin-prep
 
 
 # This magic automatically generates makefile dependencies

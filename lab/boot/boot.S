@@ -1,3 +1,4 @@
+
 #include <inc/mmu.h>
 
 # Start the CPU: switch to 32-bit protected mode, jump into C.
@@ -45,9 +46,9 @@ seta20.2:
   # and segment translation that makes virtual addresses 
   # identical to their physical addresses, so that the 
   # effective memory map does not change during the switch.
-  lgdt    gdtdesc
+  lgdt    gdtdesc			#gdt address => 0x7c64
   movl    %cr0, %eax
-  orl     $CR0_PE_ON, %eax
+  orl     $CR0_PE_ON, %eax	#Turns the protection bit in cr0 on
   movl    %eax, %cr0
   
   # Jump to next instruction, but in 32-bit code segment.

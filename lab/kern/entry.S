@@ -71,8 +71,8 @@ relocated:
 	# Clear the frame pointer register (EBP)
 	# so that once we get into debugging C code,
 	# stack backtraces will be terminated properly.
-	movl	$0x0,%ebp			# nuke frame pointer
-
+	movl	$0x0,%ebp			# nuke frame pointer #code breaks if paging is not enabled.
+	# We move 0 to ebp => init function. 
 	# Set the stack pointer
 	movl	$(bootstacktop),%esp
 

@@ -24,7 +24,7 @@ struct Command {
 static struct Command commands[] = {
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
-	{ "backtrace", "backtrace of the stack", mon_backtrace },
+	{"backtrace","call mon_backtrace",mon_backtrace }
 };
 #define NCOMMANDS (sizeof(commands)/sizeof(commands[0]))
 
@@ -60,16 +60,21 @@ int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
 	// Your code here.
-	uint32_t * ebp = (uint32_t *)read_ebp();
-	struct Eipdebuginfo info; 
-	cprintf("\nStack backtrace:\n");
-	for(;ebp != 0x0;)
-	{
-		cprintf("  ebp %08x  eip  %08x args %08x %08x %08x %08x %08x\n",ebp,ebp[1], ebp[2], ebp[3], ebp[4], ebp[5], ebp[6]);
-		debuginfo_eip(ebp[1],&info);
-		cprintf("         %s:%d: %.*s+%u\n", info.eip_file, info.eip_line, info.eip_fn_namelen, info.eip_fn_name, ((uint32_t)ebp[1]-(uint32_t)(info.eip_fn_addr)));
-		ebp = (uint32_t *)*ebp;
-	}
+	uint32_t *myebp = (uint32_t *)read_ebp();		//read ebp, is an asm function: directly reads ebp register
+	struct Eipdebuginfo info;
+	while (myebp){
+
+					
+		cprintf("ebp %08x eip %08x args %08x %08x %08x %08x %08x\n", myebp,myebp[1],myebp[2],myebp[3],myebp[4],myebp[5],myebp[6]);
+		if(debuginfo_eip((uintptr_t)myebp[1],&info) == -1)
+			cprintf("Debug ebp info error\n");
+		
+cprintf("     %s:%u: %.*s+%u \n",info.eip_file,info.eip_line,info.eip_fn_namelen,info.eip_fn_name,myebp[1]-info.eip_fn_addr);	
+//cprintf("     %s:%u: %s+%u \n",info.eip_file,info.eip_line,info.eip_fn_name,myebp[1]-info.eip_fn_addr);		
+		myebp = (uint32_t *)myebp[0];	
+		
+	}	
+	
 	return 0;
 }
 
