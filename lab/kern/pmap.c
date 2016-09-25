@@ -219,7 +219,7 @@ mem_init(void)
 	// Permissions: kernel RW, user NONE
 	// Your code goes here:
 	//boot_map_region(kern_pgdir, KERNBASE, npages*PGSIZE, PADDR((void*)KERNBASE), PTE_W | PTE_P); //npages*PGSIZE
-	boot_map_region(kern_pgdir, KERNBASE, 0xffffffff-0xf0000000, 0, PTE_W | PTE_P);
+	boot_map_region(kern_pgdir, KERNBASE, 0xffffffff-0xf0000000+PGSIZE, 0, PTE_W | PTE_P);
 	
 	// Check that the initial page directory has been set up correctly.
 	check_kern_pgdir();
@@ -468,22 +468,31 @@ boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm
 	//cprintf("\nVA:%x, PA:%x, size:%u",va,pa,size);
 	uintptr_t tmpVa = va+size; 
 	
+	if(tmpVa < va)
+		panic("\ntmpVa is greater than 32 bits");
+	//cprintf("\nVA:%x, PA:%x, tmpVa:%x",va,pa,tmpVa);
+	
 	for(;va<tmpVa;)
 	{
+		
 		pte_t * pte = pgdir_walk(pgdir, (void *)va, true);
 		if(pte == NULL)
-			panic("Something bad happened in Bootmap region");
+			panic("Out of Free Memory");
 		else
 		{
 			*pte = pa | perm | PTE_P;
 			//cprintf("\nValue of PTE in boot MAP:%x  diff of tmpVA:%p,  ",*pte, tmpVa-va);
 			
-			if(va >= 0xFFFFF000)			
+			if(va >= 0xFFFFF000)
+			{			
+				//cprintf("\nI am Here\nva:%x\npa:%x",va,pa);
 				break;
+			}
 			va += PGSIZE;
 			pa += PGSIZE;
 		}
 	}	
+	cprintf("\nVA after:%x, PA after:%x",va,pa,size);
 }
 
 //
