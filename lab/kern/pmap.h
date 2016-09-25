@@ -8,7 +8,6 @@
 
 #include <inc/memlayout.h>
 #include <inc/assert.h>
-#define ONEMB 0x100000
 
 extern char bootstacktop[], bootstack[];
 
@@ -66,7 +65,6 @@ void	tlb_invalidate(pde_t *pgdir, void *va);
 static inline physaddr_t
 page2pa(struct PageInfo *pp)
 {
-	//return (physaddr_t)(((uint32_t)pp - (uint32_t)pages) << PGSHIFT);
 	return (pp - pages) << PGSHIFT;
 }
 

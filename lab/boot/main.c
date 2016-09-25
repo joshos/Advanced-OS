@@ -39,28 +39,27 @@ void
 bootmain(void)
 {
 	struct Proghdr *ph, *eph;
- 
-	
-	
+
 	// read 1st page off disk
-	readseg((uint32_t) ELFHDR, SECTSIZE*8, 0);	//offset is zero since it is copying the kernel itself
-	
-	
+	readseg((uint32_t) ELFHDR, SECTSIZE*8, 0);
+
 	// is this a valid ELF?
 	if (ELFHDR->e_magic != ELF_MAGIC)
 		goto bad;
-
+	volatile int i=0;
 	// load each program segment (ignores ph flags)
 	ph = (struct Proghdr *) ((uint8_t *) ELFHDR + ELFHDR->e_phoff);
 	eph = ph + ELFHDR->e_phnum;
 	for (; ph < eph; ph++)
+	{
 		// p_pa is the load address of this segment (as well
 		// as the physical address)
-		readseg(ph->p_pa, ph->p_memsz, ph->p_offset);		//kernel start address
+		readseg(ph->p_pa, ph->p_memsz, ph->p_offset);  //ph->p_pa = 0x100000 (1MB)
+		i++;
+	}
 
 	// call the entry point from the ELF header
 	// note: does not return!
-	 	
 	((void (*)(void)) (ELFHDR->e_entry))();
 
 bad:
