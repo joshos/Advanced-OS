@@ -120,6 +120,7 @@ env_init(void)
 	for(i = NENV-1;i > -1;i--)    //start from 1023 and go till 0.
 	{
 		envs[i].env_id = 0;
+		envs[i].env_status = ENV_FREE; 
 		envs[i].env_link = env_free_list; 
 		env_free_list = &envs[i];
 		
