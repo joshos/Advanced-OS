@@ -342,100 +342,90 @@ bootmain(void)
     7d09:	89 e5                	mov    %esp,%ebp
     7d0b:	56                   	push   %esi
     7d0c:	53                   	push   %ebx
-    7d0d:	83 ec 10             	sub    $0x10,%esp
 	struct Proghdr *ph, *eph;
 
 	// read 1st page off disk
 	readseg((uint32_t) ELFHDR, SECTSIZE*8, 0);
-    7d10:	6a 00                	push   $0x0
-    7d12:	68 00 10 00 00       	push   $0x1000
-    7d17:	68 00 00 01 00       	push   $0x10000
-    7d1c:	e8 ae ff ff ff       	call   7ccf <readseg>
+    7d0d:	6a 00                	push   $0x0
+    7d0f:	68 00 10 00 00       	push   $0x1000
+    7d14:	68 00 00 01 00       	push   $0x10000
+    7d19:	e8 b1 ff ff ff       	call   7ccf <readseg>
 
 	// is this a valid ELF?
 	if (ELFHDR->e_magic != ELF_MAGIC)
-    7d21:	83 c4 0c             	add    $0xc,%esp
-    7d24:	81 3d 00 00 01 00 7f 	cmpl   $0x464c457f,0x10000
-    7d2b:	45 4c 46 
-    7d2e:	75 45                	jne    7d75 <bootmain+0x6d>
+    7d1e:	83 c4 0c             	add    $0xc,%esp
+    7d21:	81 3d 00 00 01 00 7f 	cmpl   $0x464c457f,0x10000
+    7d28:	45 4c 46 
+    7d2b:	75 37                	jne    7d64 <bootmain+0x5c>
 		goto bad;
-	volatile int i=0;
-    7d30:	c7 45 f4 00 00 00 00 	movl   $0x0,-0xc(%ebp)
+	//volatile int i=0;
 	// load each program segment (ignores ph flags)
 	ph = (struct Proghdr *) ((uint8_t *) ELFHDR + ELFHDR->e_phoff);
+    7d2d:	a1 1c 00 01 00       	mov    0x1001c,%eax
 	eph = ph + ELFHDR->e_phnum;
-    7d37:	0f b7 35 2c 00 01 00 	movzwl 0x1002c,%esi
+    7d32:	0f b7 35 2c 00 01 00 	movzwl 0x1002c,%esi
 	// is this a valid ELF?
 	if (ELFHDR->e_magic != ELF_MAGIC)
 		goto bad;
-	volatile int i=0;
+	//volatile int i=0;
 	// load each program segment (ignores ph flags)
 	ph = (struct Proghdr *) ((uint8_t *) ELFHDR + ELFHDR->e_phoff);
-    7d3e:	a1 1c 00 01 00       	mov    0x1001c,%eax
-    7d43:	8d 98 00 00 01 00    	lea    0x10000(%eax),%ebx
+    7d39:	8d 98 00 00 01 00    	lea    0x10000(%eax),%ebx
 	eph = ph + ELFHDR->e_phnum;
-    7d49:	c1 e6 05             	shl    $0x5,%esi
-    7d4c:	01 de                	add    %ebx,%esi
+    7d3f:	c1 e6 05             	shl    $0x5,%esi
+    7d42:	01 de                	add    %ebx,%esi
 	for (; ph < eph; ph++)
-    7d4e:	39 f3                	cmp    %esi,%ebx
-    7d50:	73 1d                	jae    7d6f <bootmain+0x67>
+    7d44:	39 f3                	cmp    %esi,%ebx
+    7d46:	73 16                	jae    7d5e <bootmain+0x56>
 	{
 		// p_pa is the load address of this segment (as well
 		// as the physical address)
 		readseg(ph->p_pa, ph->p_memsz, ph->p_offset);  //ph->p_pa = 0x100000 (1MB)
-    7d52:	ff 73 04             	pushl  0x4(%ebx)
-    7d55:	ff 73 14             	pushl  0x14(%ebx)
+    7d48:	ff 73 04             	pushl  0x4(%ebx)
+    7d4b:	ff 73 14             	pushl  0x14(%ebx)
 		goto bad;
-	volatile int i=0;
+	//volatile int i=0;
 	// load each program segment (ignores ph flags)
 	ph = (struct Proghdr *) ((uint8_t *) ELFHDR + ELFHDR->e_phoff);
 	eph = ph + ELFHDR->e_phnum;
 	for (; ph < eph; ph++)
-    7d58:	83 c3 20             	add    $0x20,%ebx
+    7d4e:	83 c3 20             	add    $0x20,%ebx
 	{
 		// p_pa is the load address of this segment (as well
 		// as the physical address)
 		readseg(ph->p_pa, ph->p_memsz, ph->p_offset);  //ph->p_pa = 0x100000 (1MB)
-    7d5b:	ff 73 ec             	pushl  -0x14(%ebx)
-    7d5e:	e8 6c ff ff ff       	call   7ccf <readseg>
-		i++;
-    7d63:	8b 45 f4             	mov    -0xc(%ebp),%eax
+    7d51:	ff 73 ec             	pushl  -0x14(%ebx)
+    7d54:	e8 76 ff ff ff       	call   7ccf <readseg>
 		goto bad;
-	volatile int i=0;
+	//volatile int i=0;
 	// load each program segment (ignores ph flags)
 	ph = (struct Proghdr *) ((uint8_t *) ELFHDR + ELFHDR->e_phoff);
 	eph = ph + ELFHDR->e_phnum;
 	for (; ph < eph; ph++)
-    7d66:	83 c4 0c             	add    $0xc,%esp
-	{
-		// p_pa is the load address of this segment (as well
-		// as the physical address)
-		readseg(ph->p_pa, ph->p_memsz, ph->p_offset);  //ph->p_pa = 0x100000 (1MB)
-		i++;
-    7d69:	40                   	inc    %eax
-    7d6a:	89 45 f4             	mov    %eax,-0xc(%ebp)
-    7d6d:	eb df                	jmp    7d4e <bootmain+0x46>
+    7d59:	83 c4 0c             	add    $0xc,%esp
+    7d5c:	eb e6                	jmp    7d44 <bootmain+0x3c>
+		//i++;
 	}
 
 	// call the entry point from the ELF header
 	// note: does not return!
 	((void (*)(void)) (ELFHDR->e_entry))();
-    7d6f:	ff 15 18 00 01 00    	call   *0x10018
+    7d5e:	ff 15 18 00 01 00    	call   *0x10018
 }
 
 static __inline void
 outw(int port, uint16_t data)
 {
 	__asm __volatile("outw %0,%w1" : : "a" (data), "d" (port));
-    7d75:	ba 00 8a 00 00       	mov    $0x8a00,%edx
-    7d7a:	b8 00 8a ff ff       	mov    $0xffff8a00,%eax
-    7d7f:	66 ef                	out    %ax,(%dx)
-    7d81:	b8 00 8e ff ff       	mov    $0xffff8e00,%eax
-    7d86:	66 ef                	out    %ax,(%dx)
+    7d64:	ba 00 8a 00 00       	mov    $0x8a00,%edx
+    7d69:	b8 00 8a ff ff       	mov    $0xffff8a00,%eax
+    7d6e:	66 ef                	out    %ax,(%dx)
+    7d70:	b8 00 8e ff ff       	mov    $0xffff8e00,%eax
+    7d75:	66 ef                	out    %ax,(%dx)
 
 bad:
 	outw(0x8A00, 0x8A00);
 	outw(0x8A00, 0x8E00);
 	while (1)
 		/* do nothing */;
-    7d88:	eb fe                	jmp    7d88 <bootmain+0x80>
+    7d77:	eb fe                	jmp    7d77 <bootmain+0x6f>

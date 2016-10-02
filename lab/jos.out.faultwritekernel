@@ -1,0 +1,29 @@
++ ld obj/kern/kernel
++ mk obj/kern/kernel.img
+6828 decimal is 15254 octal!
+Physical memory: 66556K available, base = 640K, extended = 65532K npages:0
+
+check_page_alloc() succeeded!
+check_page() succeeded!
+check_kern_pgdir() succeeded!
+check_page_installed_pgdir() succeeded!
+[00000000] new env 00001000
+EAX=00800020 EBX=f017179c ECX=00000008 EDX=f0976768
+ESI=f0177748 EDI=00801000 EBP=f0117f74 ESP=f0117f6c
+EIP=f0103e20 EFL=00000006 [-----P-] CPL=0 II=0 A20=1 SMM=0 HLT=0
+ES =0010 00000000 ffffffff 00cf9300 DPL=0 DS   [-WA]
+CS =0008 00000000 ffffffff 00cf9a00 DPL=0 CS32 [-R-]
+SS =0010 00000000 ffffffff 00cf9300 DPL=0 DS   [-WA]
+DS =0010 00000000 ffffffff 00cf9300 DPL=0 DS   [-WA]
+FS =0023 00000000 ffffffff 00cff300 DPL=3 DS   [-WA]
+GS =0023 00000000 ffffffff 00cff300 DPL=3 DS   [-WA]
+LDT=0000 00000000 00000000 00008200 DPL=0 LDT
+TR =0028 f0179a80 00000067 00408900 DPL=0 TSS32-avl
+GDT=     f011a320 0000002f
+IDT=     f0179240 000007ff
+CR0=80050033 CR2=00801000 CR3=003bc000 CR4=00000000
+DR0=00000000 DR1=00000000 DR2=00000000 DR3=00000000 
+DR6=ffff0ff0 DR7=00000400
+EFER=0000000000000000
+Triple fault.  Halting for inspection via QEMU monitor.
+qemu: terminating on signal 15 from pid 5051
