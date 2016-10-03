@@ -292,11 +292,10 @@ region_alloc(struct Env *e, void *va, size_t len)
 	void * tmp = va+len;
 	if(tmp < va)
 		panic("va+len is greater than 4GB.");
-	
+	if(tmp > UTOP)
+		panic("Illegal Memory Access");
 	//tmp = ROUNDUP(va+len,PGSIZE);
-	
-	
-	
+		
 	int numberOfPages = len/PGSIZE;
 	while(numberOfPages)
 	{
