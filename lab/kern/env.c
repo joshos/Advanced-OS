@@ -288,10 +288,10 @@ region_alloc(struct Env *e, void *va, size_t len)
 	//   (Watch out for corner-cases!)
 	va = ROUNDDOWN(va,PGSIZE);
 	
-	/*void * tmp = va+len;
+	void * tmp = va+len;
 	if(tmp < va)
 		panic("va+len is greater than 4GB.");
-	tmp = ROUNDUP(va+len,PGSIZE);*/
+	tmp = ROUNDUP(va+len,PGSIZE);
 	
 	len = ROUNDUP(len,PGSIZE);
 	
