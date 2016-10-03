@@ -287,13 +287,15 @@ region_alloc(struct Env *e, void *va, size_t len)
 	//   You should round va down, and round (va + len) up.
 	//   (Watch out for corner-cases!)
 	va = ROUNDDOWN(va,PGSIZE);
+	len = ROUNDUP(len,PGSIZE);
 	
 	void * tmp = va+len;
 	if(tmp < va)
 		panic("va+len is greater than 4GB.");
-	tmp = ROUNDUP(va+len,PGSIZE);
 	
-	len = ROUNDUP(len,PGSIZE);
+	//tmp = ROUNDUP(va+len,PGSIZE);
+	
+	
 	
 	int numberOfPages = len/PGSIZE;
 	while(numberOfPages)
