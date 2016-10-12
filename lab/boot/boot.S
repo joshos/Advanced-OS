@@ -1,3 +1,4 @@
+
 #include <inc/mmu.h>
 
 # Start the CPU: switch to 32-bit protected mode, jump into C.
@@ -45,9 +46,9 @@ seta20.2:
   # and segment translation that makes virtual addresses 
   # identical to their physical addresses, so that the 
   # effective memory map does not change during the switch.
-  lgdt    gdtdesc  # gdtdesc address =  0x7c64
+  lgdt    gdtdesc			#gdt address => 0x7c64
   movl    %cr0, %eax
-  orl     $CR0_PE_ON, %eax
+  orl     $CR0_PE_ON, %eax	#Turns the protection bit in cr0 on
   movl    %eax, %cr0
   
   # Jump to next instruction, but in 32-bit code segment.
@@ -65,8 +66,8 @@ protcseg:
   movw    %ax, %ss                # -> SS: Stack Segment
   
   # Set up the stack pointer and call into C.
-  movl    $start, %esp #start address is:0x7c00
-  call bootmain    # bootmain() address: 0x7d08
+  movl    $start, %esp
+  call bootmain
 
   # If bootmain returns (it shouldn't), loop.
 spin:

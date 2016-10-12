@@ -44,7 +44,6 @@
 // Page directory and page table constants.
 #define NPDENTRIES	1024		// page directory entries per page directory
 #define NPTENTRIES	1024		// page table entries per page table
-#define ONEMB 		0x100000
 
 #define PGSIZE		4096		// bytes mapped by a page
 #define PGSHIFT		12		// log2(PGSIZE)
@@ -89,7 +88,7 @@
 #define CR0_CD		0x40000000	// Cache Disable
 #define CR0_PG		0x80000000	// Paging
 
-#define CR4_PCE		0x00000100	// Performance counter enable
+#define CR4_PCE		0x00000100	// Performance conter enable
 #define CR4_MCE		0x00000040	// Machine Check Enable
 #define CR4_PSE		0x00000010	// Page Size Extensions
 #define CR4_DE		0x00000008	// Debugging Extensions
