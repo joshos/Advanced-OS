@@ -46,26 +46,41 @@
 /*
  * Lab 3: Your code here for generating entry points for the different traps.
  */
-TRAPHANDLER_NOEC(trap_Divide_error, T_DIVIDE)
 
+TRAPHANDLER_NOEC(divide_zero,T_DIVIDE)
+TRAPHANDLER_NOEC(brkpoint,T_BRKPT)
+TRAPHANDLER(no_seg,T_SEGNP)
+TRAPHANDLER_NOEC(debug,T_DEBUG)
+TRAPHANDLER_NOEC(nmi,T_NMI)
+TRAPHANDLER_NOEC(oflow,T_OFLOW)
+TRAPHANDLER_NOEC(bound,T_BOUND)
+TRAPHANDLER_NOEC(illop,T_ILLOP)
+TRAPHANDLER_NOEC(device,T_DEVICE)
+TRAPHANDLER(dblflt,T_DBLFLT)
+TRAPHANDLER(tss, T_TSS)
 
+TRAPHANDLER(stack, T_STACK)
+TRAPHANDLER(gpflt, T_GPFLT)
+TRAPHANDLER(pgflt, T_PGFLT)
 
+TRAPHANDLER_NOEC(fperr, T_FPERR)
+TRAPHANDLER(align, T_ALIGN)
+TRAPHANDLER_NOEC(mchk, T_MCHK)
+TRAPHANDLER_NOEC(simderr, T_SIMDERR)
+
+TRAPHANDLER_NOEC(syscalls, T_SYSCALL)
 /*
  * Lab 3: Your code here for _alltraps
  */
- _alltraps:
- 	pushal
- 	pushl %es
- 	pushl %ds
-	//pushl %ss
-	movl $GD_KD, %eax
-	movw %ax, %ds
-	movw %ax, %es
 
-	pushl %esp
-	
-	call trap
- 
- 
- 
 
+_alltraps:
+
+pushl %ds
+pushl %es	//Not pushing gs and fs, since the kernel never uses it.since only 1 cpu
+pushal		//Saving he current context. Like struct TrapFrame?
+movl $GD_KD,%eax	
+movw %ax, %ds		
+movw %ax, %es
+pushl %esp		//function argument. Trapframe
+call trap

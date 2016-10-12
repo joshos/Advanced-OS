@@ -66,7 +66,7 @@ stab_binsearch(const struct Stab *stabs, int *region_left, int *region_right,
 		int true_m = (l + r) / 2, m = true_m;
 
 		// search for earliest stab with right type
-		while (m >= l && stabs[m].n_type != type)
+		while (m >= l && stabs[m].n_type != type)		//seraching from middle to left most
 			m--;
 		if (m < l) {	// no match in [l, m]
 			l = true_m + 1;
@@ -164,15 +164,18 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 	// Search the entire set of stabs for the source file (type N_SO).
 	lfile = 0;
 	rfile = (stab_end - stabs) - 1;
-	stab_binsearch(stabs, &lfile, &rfile, N_SO, addr);
+	stab_binsearch(stabs, &lfile, &rfile, N_SO, addr);		//N_SO since we are searching source file
 	if (lfile == 0)
 		return -1;
 
+	//info->eip_file =(char *)stabs[rfile].n_strx;
 	// Search within that file's stabs for the function definition
 	// (N_FUN).
 	lfun = lfile;
+
+
 	rfun = rfile;
-	stab_binsearch(stabs, &lfun, &rfun, N_FUN, addr);
+	stab_binsearch(stabs, &lfun, &rfun, N_FUN, addr);		//N_FUN since we are searching function 
 
 	if (lfun <= rfun) {
 		// stabs[lfun] points to the function name
@@ -205,12 +208,11 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 	//	which one.
 	// Your code here.
 	stab_binsearch(stabs, &lline, &rline, N_SLINE, addr);
-	if(lline>rline)
-	{
-		return -1;
-	}
-	else
-		info->eip_line = stabs[lline].n_desc;
+	if(lline > rline)	//Check bounds
+		return -1;	//error
+
+	info->eip_line = stabs[lline].n_desc;
+
 	// Search backwards from the line number for the relevant filename
 	// stab.
 	// We can't just use the "lfile" stab because inlined functions

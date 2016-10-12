@@ -8,7 +8,28 @@
 #include <kern/monitor.h>
 #include <kern/env.h>
 #include <kern/syscall.h>
+#define DPLKERN 0
+#define DPLUSR 3
+void divide_zero();
+void brkpoint();
+void no_seg();
+void debug();
+void nmi();
+void oflow();
+void bound();
+void illop();
+void device();
+void dblflt();
+void tss();    
+void stack();  
+void gpflt();  
+void pgflt();  
+void fperr();  
+void align();  
+void mchk();   
+void simderr();
 
+void syscalls();
 static struct Taskstate ts;
 
 /* For debugging, so print_trapframe can distinguish between printing
@@ -25,7 +46,7 @@ struct Pseudodesc idt_pd = {
 	sizeof(idt) - 1, (uint32_t) idt
 };
 
-void trap_Divide_error();
+
 static const char *trapname(int trapno)
 {
 	static const char * const excnames[] = {
@@ -65,7 +86,27 @@ trap_init(void)
 	extern struct Segdesc gdt[];
 
 	// LAB 3: Your code here.
-	SETGATE(idt[T_DIVIDE], 1, GD_KT, trap_Divide_error, 0);
+
+	SETGATE(idt[T_DIVIDE],0,GD_KT,divide_zero,DPLKERN);	//CSS=kernel text
+	SETGATE(idt[T_BRKPT],0,GD_KT,brkpoint,DPLUSR);
+	SETGATE(idt[T_SEGNP],0,GD_KT,no_seg,DPLKERN);
+	SETGATE(idt[T_DEBUG],0,GD_KT,debug,DPLKERN);
+	SETGATE(idt[T_NMI],0,GD_KT,nmi,DPLKERN);
+	SETGATE(idt[T_OFLOW],0,GD_KT,oflow,DPLKERN);
+	SETGATE(idt[T_BOUND],0,GD_KT,bound,DPLKERN);
+	SETGATE(idt[T_ILLOP],0,GD_KT,illop,DPLKERN);
+	SETGATE(idt[T_DEVICE],0,GD_KT,device,DPLKERN);
+	SETGATE(idt[T_DBLFLT],0,GD_KT,dblflt,DPLKERN);
+	SETGATE(idt[T_TSS], 0, GD_KT, tss, DPLKERN);
+	SETGATE(idt[T_STACK], 0, GD_KT, stack, DPLKERN);
+	SETGATE(idt[T_GPFLT], 0, GD_KT, gpflt, DPLKERN);
+	SETGATE(idt[T_PGFLT], 0, GD_KT, pgflt, DPLKERN);
+	SETGATE(idt[T_FPERR], 0, GD_KT, fperr, DPLKERN);
+	SETGATE(idt[T_ALIGN], 0, GD_KT, align, DPLKERN);
+	SETGATE(idt[T_MCHK], 0, GD_KT, mchk, DPLKERN);
+	SETGATE(idt[T_SIMDERR], 0, GD_KT, simderr, DPLKERN);
+
+	SETGATE(idt[T_SYSCALL], 0, GD_KT, syscalls, DPLUSR);
 	// Per-CPU setup 
 	trap_init_percpu();
 }
@@ -119,8 +160,7 @@ print_trapframe(struct Trapframe *tf)
 	cprintf("  eip  0x%08x\n", tf->tf_eip);
 	cprintf("  cs   0x----%04x\n", tf->tf_cs);
 	cprintf("  flag 0x%08x\n", tf->tf_eflags);
-	if ((tf->tf_cs & 3) != 0) 
-	{
+	if ((tf->tf_cs & 3) != 0) {
 		cprintf("  esp  0x%08x\n", tf->tf_esp);
 		cprintf("  ss   0x----%04x\n", tf->tf_ss);
 	}
@@ -144,7 +184,41 @@ trap_dispatch(struct Trapframe *tf)
 {
 	// Handle processor exceptions.
 	// LAB 3: Your code here.
+	//if(tf->tf_trapno == T_PGFLT)
+	//	page_fault_handler(tf);
 
+	int32_t reteax;
+	switch(tf->tf_trapno){
+
+	case T_PGFLT:
+		page_fault_handler(tf);
+		
+		return;
+
+	case T_BRKPT:
+		
+		monitor(tf);		//from kern/monitor.h for kernel monitor
+		return;
+
+
+	case T_DEBUG:
+		
+		monitor(tf);		//from kern/monitor.h for kernel monitor
+		return;
+
+	case T_SYSCALL:
+		//cprintf("%x,%x,%x,%x\n",tf->tf_regs.reg_eax,tf->tf_regs.reg_edx,tf->tf_regs.reg_ecx,tf->tf_regs.reg_ebx);
+		reteax = syscall(tf->tf_regs.reg_eax,		
+				tf->tf_regs.reg_edx,
+				tf->tf_regs.reg_ecx,
+				tf->tf_regs.reg_ebx,
+				tf->tf_regs.reg_edi,
+				tf->tf_regs.reg_esi);
+	
+		tf->tf_regs.reg_eax = reteax;
+		
+		return;
+	}
 	// Unexpected trap: The user process or the kernel has a bug.
 	print_trapframe(tf);
 	if (tf->tf_cs == GD_KT)
@@ -166,7 +240,7 @@ trap(struct Trapframe *tf)
 	// fails, DO NOT be tempted to fix it by inserting a "cli" in
 	// the interrupt path.
 	assert(!(read_eflags() & FL_IF));
-	//print_trapframe(tf);
+
 	cprintf("Incoming TRAP frame at %p\n", tf);
 
 	if ((tf->tf_cs & 3) == 3) {
