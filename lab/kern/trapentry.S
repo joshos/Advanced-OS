@@ -78,7 +78,7 @@ _alltraps:
 
 pushl %ds
 pushl %es	//Not pushing gs and fs, since the kernel never uses it.since only 1 cpu
-pushal		//Saving he current context. Like struct TrapFrame?
+pushal		//Saving he current context. Like struct TrapFrame
 movl $GD_KD,%eax	
 movw %ax, %ds		
 movw %ax, %es

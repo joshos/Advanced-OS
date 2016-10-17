@@ -626,8 +626,38 @@ int
 user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 {
 	// LAB 3: Your code here.
+	void* VA_base = (void *)va;
+	void* VA_cur = ROUNDDOWN(VA_base,PGSIZE);
+	void* VA_top = VA_base + len;		
+	int numpages = ((uint32_t)VA_top - (uint32_t)VA_base)/PGSIZE;		
+	void* VA_temp = VA_base;
+	pte_t* pte;
 
+	while(VA_cur < VA_top){
+		pte = pgdir_walk(env->env_pgdir,(void *)VA_cur,false);		
+		if (pte && (uint32_t)VA_cur <= ULIM && (((uint32_t) *pte & perm) == perm)){	//valid address with correct permissions
+			VA_cur += PGSIZE;
+			continue;
+		}
+		else								//Invalid address
+		{
+			if(VA_cur == ROUNDDOWN(va,PGSIZE))			//Fault at the rounddown address
+				user_mem_check_addr = (uintptr_t) va;		//set to VA, since VA_cur not in [va, va+len)
+			else
+				user_mem_check_addr = (uintptr_t) VA_cur;
+			
+			return -E_FAULT;
+
+
+		}
+
+
+	}
+
+	
 	return 0;
+
+
 }
 
 //
