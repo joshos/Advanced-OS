@@ -241,7 +241,7 @@ trap_dispatch(struct Trapframe *tf)
 			page_fault_handler(tf);
 			break;
 		case T_BRKPT:
-			print_trapframe(tf);
+			//print_trapframe(tf);
 			monitor(NULL);
 			break;
 		case T_SYSCALL:
@@ -262,6 +262,7 @@ trap_dispatch(struct Trapframe *tf)
 			tf->tf_regs.reg_eax = syscall(syscallNO, a1,a2,a3,a4,a5);
 			break;
 		default:
+			cprintf("\nIn default trap case. The code should not reach here");
 			print_trapframe(tf);
 			if (tf->tf_cs == GD_KT)
 				panic("unhandled trap in kernel");
@@ -302,11 +303,9 @@ trap(struct Trapframe *tf)
 	// the interrupt path.
 	assert(!(read_eflags() & FL_IF));
 
-
-
 	//print_trapframe(tf);
 	
-	cprintf("Incoming TRAP frame at %p\n", tf);
+	//cprintf("Incoming TRAP frame at %p\n", tf);
 	
 
 	if ((tf->tf_cs & 3) == 3) {
@@ -400,11 +399,52 @@ page_fault_handler(struct Trapframe *tf)
 	//   (the 'tf' variable points at 'curenv->env_tf').
 
 	// LAB 4: Your code here.
+	if(curenv->env_pgfault_upcall == NULL || tf->tf_esp > UXSTACKTOP || 
+		(tf->tf_esp > USTACKTOP && tf->tf_esp < UXSTACKTOP - PGSIZE))
+	{
+		cprintf("[%08x] user fault va %08x ip %08x\n",
+		curenv->env_id, fault_va, tf->tf_eip);
+		print_trapframe(tf);
+		env_destroy(curenv);
+	}
+
+	uint32_t x_stacktop;
+
+	if(tf->tf_esp < USTACKTOP) //First call to user pagefault. Need to change the stack from user stack to exception stack.
+	{
+		x_stacktop = UXSTACKTOP - sizeof(struct UTrapframe); // The minus denotes that the handler can use the stack once the kernel has
+															 // put the Usertrapframe onto the UX stack.
+	}
+	else		//We are in recursive user pagefault. Allocate 1 word for scratch space as memtioned in the comments.
+	{
+		x_stacktop = tf->tf_esp - sizeof(struct UTrapframe) - 4;   //the 4 denotes the 1 word scratch space.
+	}
+
+	user_mem_assert(curenv, (void *) x_stacktop, 1, PTE_W | PTE_U);   //check for the x_stacktop for memory errors. Check for 1 page.
+
+	struct UTrapframe *utp = (struct UTrapframe *)x_stacktop;
+
+	utp->utf_fault_va = fault_va;
+	utp->utf_err = tf->tf_err;
+	utp->utf_regs = tf->tf_regs;
+	utp->utf_eip = tf->tf_eip;
+	utp->utf_eflags = tf->tf_eflags;
+	utp->utf_esp = tf->tf_esp;
+
+
+	//Change the stack and the eip of this trapframe and maybe run the upcall
+
+	tf->tf_esp = (uintptr_t)x_stacktop;
+	tf->tf_eip = (uintptr_t)curenv->env_pgfault_upcall;
+
+	env_run(curenv);
+
+
 
 	// Destroy the environment that caused the fault.
-	cprintf("[%08x] user fault va %08x ip %08x\n",
+	/*cprintf("[%08x] user fault va %08x ip %08x\n",
 		curenv->env_id, fault_va, tf->tf_eip);
 	print_trapframe(tf);
-	env_destroy(curenv);
+	env_destroy(curenv);*/
 }
 

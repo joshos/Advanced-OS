@@ -18,7 +18,7 @@ libmain(int argc, char **argv)
 	//((sys_getenvid) & (1024 - 1))
 	int envid = sys_getenvid();
 	int index = envid & (1023);
-	cprintf("Value of x:%x\n",index);
+	//cprintf("Value of x:%x\n",index);
 	thisenv = &envs[index];
 	// save the name of the program so that panic() can use it
 	if (argc > 0)

@@ -223,7 +223,7 @@ env_alloc(struct Env **newenv_store, envid_t parent_id)
 	int32_t generation;
 	int r;
 	struct Env *e;
-
+	//cprintf("\nIn Env Alloc. CPU ID:%d.\n",thiscpu->cpu_id);
 	if (!(e = env_free_list))
 		return -E_NO_FREE_ENV;
 
@@ -562,9 +562,11 @@ env_run(struct Env *e)
 	// LAB 3: Your code here.
 	if(curenv != NULL && curenv != e)
 	{
+		
 		switch(curenv->env_status)
 		{
 			case ENV_RUNNING:
+				//cprintf("\nENV Status:%d",curenv->env_status);
 				curenv->env_status = ENV_RUNNABLE;
 				break;
 		}
@@ -572,9 +574,9 @@ env_run(struct Env *e)
 	curenv = e;
 	curenv->env_status = ENV_RUNNING;
 	curenv->env_runs++;
-	lcr3(PADDR(e->env_pgdir));
+	lcr3(PADDR(curenv->env_pgdir));
 	unlock_kernel();
-	env_pop_tf(&e->env_tf);
+	env_pop_tf(&curenv->env_tf);
 	//panic("env_run not yet implemented");*/
 	
 	//env_pop_tf(&curenv->env_tf);
