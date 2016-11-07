@@ -87,8 +87,8 @@ sys_exofork(void)
 	// LAB 4: Your code here.
 	struct Env * e;
 	//cprintf("\nIn Exo Fork. Should be called once.\n");
-	
-	if(!(env_alloc(&e, curenv->env_id)))
+	int r;
+	if(!(r = env_alloc(&e, curenv->env_id)))
 	{
 		e->env_status = ENV_NOT_RUNNABLE;
 		//memmove((void *) &e->env_tf, (void *) &curenv->env_tf, sizeof(struct Trapframe));
@@ -98,7 +98,7 @@ sys_exofork(void)
 	}
 	else
 	{
-		return -E_NO_FREE_ENV;
+		return r;
 	}
 	
 	return e->env_id;
