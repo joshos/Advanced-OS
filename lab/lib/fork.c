@@ -46,6 +46,8 @@ pgfault(struct UTrapframe *utf)
 	
 	if ((r = sys_page_map(0, PFTEMP, 0, ROUNDDOWN(addr,PGSIZE), PTE_P|PTE_U|PTE_W)) < 0)
 		panic("sys_page_map: %e", r);
+	if((r = sys_page_unmap(0, PFTEMP))<0)
+		panic("sys_page_unmap:%e",r);
 	// LAB 4: Your code here.
 	/*void *addr = (void *) utf->utf_fault_va;
 	uint32_t err = utf->utf_err;
