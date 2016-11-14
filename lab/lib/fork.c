@@ -17,7 +17,7 @@ extern void _pgfault_upcall(void);
 static void
 pgfault(struct UTrapframe *utf)
 {
-	/*void *addr = (void *) utf->utf_fault_va;
+	void *addr = (void *) utf->utf_fault_va;
 	uint32_t err = utf->utf_err;
 	int r;
 
@@ -46,8 +46,8 @@ pgfault(struct UTrapframe *utf)
 	
 	if ((r = sys_page_map(0, PFTEMP, 0, ROUNDDOWN(addr,PGSIZE), PTE_P|PTE_U|PTE_W)) < 0)
 		panic("sys_page_map: %e", r);
-	// LAB 4: Your code here.*/
-	void *addr = (void *) utf->utf_fault_va;
+	// LAB 4: Your code here.
+	/*void *addr = (void *) utf->utf_fault_va;
 	uint32_t err = utf->utf_err;
 	int r;
 	//cprintf("%d\n",err);
@@ -79,7 +79,7 @@ pgfault(struct UTrapframe *utf)
 	if(r<0)
 		panic("sys_page_alloc: %e", r);
 
-	//panic("pgfault not implemented");
+	//panic("pgfault not implemented");*/
 }
 
 //
