@@ -73,7 +73,7 @@ _pgfault_upcall:
 
 	pushl %eax   //Push the trap time eip to the traptime stack.
 
-	//update the trap time esp value in the trapframe
+	//update the trap time esp value in the trapframe with the value updatyed by the pushl instruction.
 
 	movl %esp, 0x30(%ebp)
 
