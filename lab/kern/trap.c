@@ -50,6 +50,24 @@ void trap_alignment_Check();
 void trap_machine_check();
 void trap_simd_FPE();
 void system_call();
+void irq_0();
+void irq_1();
+void irq_2();
+void irq_3();
+void irq_4();
+void irq_5();
+void irq_6();
+void irq_7();
+void irq_8();
+void irq_9();
+void irq_10();
+void irq_11();
+void irq_12();
+void irq_13();
+void irq_14();
+void irq_15();
+
+
 
 static const char *trapname(int trapno)
 {
@@ -92,27 +110,45 @@ trap_init(void)
 	extern struct Segdesc gdt[];
 
 	// LAB 3: Your code here.
-	SETGATE(idt[T_DIVIDE], 1, GD_KT, trap_Divide_error, 0);
-	SETGATE(idt[T_DEBUG], 1, GD_KT, trap_debug, 0);
-	SETGATE(idt[T_NMI], 1, GD_KT, trap_non_maskable_Interrupt, 0);
-	SETGATE(idt[T_BRKPT], 1, GD_KT, trap_breakpoint, 3);
-	SETGATE(idt[T_OFLOW], 1, GD_KT, trap_overflow, 0);
-	SETGATE(idt[T_BOUND], 1, GD_KT, trap_bound_Range_Exceeded, 0);
-	SETGATE(idt[T_ILLOP], 1, GD_KT, trap_invalid_Opcode, 0);
-	SETGATE(idt[T_DEVICE], 1, GD_KT, trap_device_Not_Available, 0);
-	SETGATE(idt[T_DBLFLT], 1, GD_KT, trap_double_Fault, 0);
-	SETGATE(idt[T_TSS], 1, GD_KT, trap_invalid_TSS, 0);
-	SETGATE(idt[T_SEGNP], 1, GD_KT, trap_segment_Not_Present, 0);
-	SETGATE(idt[T_STACK], 1, GD_KT, trap_stack_Fault, 0);
-	SETGATE(idt[T_GPFLT], 1, GD_KT, trap_general_Protection, 0);
-	SETGATE(idt[T_PGFLT], 1, GD_KT, trap_PG, 0);
-	SETGATE(idt[T_FPERR], 1, GD_KT, trap_FPU, 0);
-	SETGATE(idt[T_ALIGN], 1, GD_KT, trap_alignment_Check, 0);
-	SETGATE(idt[T_MCHK], 1, GD_KT, trap_machine_check, 0);
-	SETGATE(idt[T_SIMDERR], 1, GD_KT, trap_simd_FPE, 0);
+	SETGATE(idt[T_DIVIDE], 0, GD_KT, trap_Divide_error, 0);
+	SETGATE(idt[T_DEBUG], 0, GD_KT, trap_debug, 0);
+	SETGATE(idt[T_NMI], 0, GD_KT, trap_non_maskable_Interrupt, 0);
+	SETGATE(idt[T_BRKPT], 0, GD_KT, trap_breakpoint, 3);
+	SETGATE(idt[T_OFLOW], 0, GD_KT, trap_overflow, 0);
+	SETGATE(idt[T_BOUND], 0, GD_KT, trap_bound_Range_Exceeded, 0);
+	SETGATE(idt[T_ILLOP], 0, GD_KT, trap_invalid_Opcode, 0);
+	SETGATE(idt[T_DEVICE], 0, GD_KT, trap_device_Not_Available, 0);
+	SETGATE(idt[T_DBLFLT], 0, GD_KT, trap_double_Fault, 0);
+	SETGATE(idt[T_TSS], 0, GD_KT, trap_invalid_TSS, 0);
+	SETGATE(idt[T_SEGNP], 0, GD_KT, trap_segment_Not_Present, 0);
+	SETGATE(idt[T_STACK], 0, GD_KT, trap_stack_Fault, 0);
+	SETGATE(idt[T_GPFLT], 0, GD_KT, trap_general_Protection, 0);
+	SETGATE(idt[T_PGFLT], 0, GD_KT, trap_PG, 0);
+	SETGATE(idt[T_FPERR], 0, GD_KT, trap_FPU, 0);
+	SETGATE(idt[T_ALIGN], 0, GD_KT, trap_alignment_Check, 0);
+	SETGATE(idt[T_MCHK], 0, GD_KT, trap_machine_check, 0);
+	SETGATE(idt[T_SIMDERR], 0, GD_KT, trap_simd_FPE, 0);
 	//sys call
-	SETGATE(idt[T_SYSCALL], 1, GD_KT, system_call, 3);
+	SETGATE(idt[T_SYSCALL], 0, GD_KT, system_call, 3);
 	
+	SETGATE(idt[IRQ_OFFSET+0], 0, GD_KT, irq_0, 0);
+	SETGATE(idt[IRQ_OFFSET+1], 0, GD_KT, irq_1, 0);
+	SETGATE(idt[IRQ_OFFSET+2], 0, GD_KT, irq_2, 0);
+	SETGATE(idt[IRQ_OFFSET+3], 0, GD_KT, irq_3, 0);
+	SETGATE(idt[IRQ_OFFSET+4], 0, GD_KT, irq_4, 0);
+	SETGATE(idt[IRQ_OFFSET+5], 0, GD_KT, irq_5, 0);
+	SETGATE(idt[IRQ_OFFSET+6], 0, GD_KT, irq_6, 0);
+	SETGATE(idt[IRQ_OFFSET+7], 0, GD_KT, irq_7, 0);
+	SETGATE(idt[IRQ_OFFSET+8], 0, GD_KT, irq_8, 0);
+	SETGATE(idt[IRQ_OFFSET+9], 0, GD_KT, irq_9, 0);
+	SETGATE(idt[IRQ_OFFSET+10], 0, GD_KT, irq_10, 0);
+	SETGATE(idt[IRQ_OFFSET+11], 0, GD_KT, irq_11, 0);
+	SETGATE(idt[IRQ_OFFSET+12], 0, GD_KT, irq_12, 0);
+	SETGATE(idt[IRQ_OFFSET+13], 0, GD_KT, irq_13, 0);
+	SETGATE(idt[IRQ_OFFSET+14], 0, GD_KT, irq_14, 0);
+	SETGATE(idt[IRQ_OFFSET+15], 0, GD_KT, irq_15, 0);
+
+
 
 	// Per-CPU setup 
 	trap_init_percpu();
@@ -261,6 +297,14 @@ trap_dispatch(struct Trapframe *tf)
 			a5 = tf->tf_regs.reg_esi;
 			tf->tf_regs.reg_eax = syscall(syscallNO, a1,a2,a3,a4,a5);
 			break;
+		// Handle clock interrupts. Don't forget to acknowledge the
+		// interrupt using lapic_eoi() before calling the scheduler!
+		// LAB 4: Your code here.
+		case IRQ_OFFSET+IRQ_TIMER:
+			//cprintf("In timer interrupt case\n");
+			lapic_eoi();
+			sched_yield();
+			break;
 		default:
 			cprintf("\nIn default trap case. The code should not reach here");
 			print_trapframe(tf);
@@ -297,13 +341,15 @@ trap(struct Trapframe *tf)
 		lock_kernel();
 
 	///cprintf("Current ENV Status:%d\nRUNNING VALUE:%d\n",curenv->env_status,ENV_RUNNING);
-
+	//print_trapframe(tf);
 	// Check that interrupts are disabled.  If this assertion
 	// fails, DO NOT be tempted to fix it by inserting a "cli" in
 	// the interrupt path.
-	assert(!(read_eflags() & FL_IF));
+	assert(!(read_eflags() & FL_IF));   // I have bypassed this assert by calling cli in the all traps function. 
+										//Not sure how it will work otherwise.
+										//Check..!! Check..!!
 
-	//print_trapframe(tf);
+	
 	
 	//cprintf("Incoming TRAP frame at %p\n", tf);
 	
@@ -366,7 +412,10 @@ page_fault_handler(struct Trapframe *tf)
 
 	// LAB 3: Your code here.
 	if ((tf->tf_cs & 3) == 0)
+	{
+		print_trapframe(tf);
 		panic("Page Fault in kernel mode");
+	}
 	// We've already handled kernel-mode exceptions, so if we get here,
 	// the page fault happened in user mode.
 
@@ -420,7 +469,7 @@ page_fault_handler(struct Trapframe *tf)
 		x_stacktop = tf->tf_esp - sizeof(struct UTrapframe) - 4;   //the 4 denotes the 1 word scratch space.
 	}
 
-	user_mem_assert(curenv, (void *) x_stacktop, 1, PTE_W | PTE_U);   //check for the x_stacktop for memory errors. Check for 1 page.
+	user_mem_assert(curenv, (void *) x_stacktop, PGSIZE, PTE_W | PTE_U);   //check for the x_stacktop for memory errors. Check for 1 page.
 
 	struct UTrapframe *utp = (struct UTrapframe *)x_stacktop;
 

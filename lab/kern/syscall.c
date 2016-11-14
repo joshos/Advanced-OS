@@ -53,7 +53,7 @@ sys_env_destroy(envid_t envid)
 {
 	int r;
 	struct Env *e;
-
+	//cprintf("Env Destroy, envid:[%08x]",envid);
 	if ((r = envid2env(envid, &e, 1)) < 0)
 		return r;
 	if (e == curenv)
@@ -88,7 +88,7 @@ sys_exofork(void)
 	struct Env * e;
 	//cprintf("\nIn Exo Fork. Should be called once.\n");
 	int r;
-	if((r = env_alloc(&e, curenv->env_id)) < 0)
+	if((r = env_alloc(&e, curenv->env_id)) == 0)
 	{
 		e->env_status = ENV_NOT_RUNNABLE;
 		//memmove((void *) &e->env_tf, (void *) &curenv->env_tf, sizeof(struct Trapframe));
@@ -192,20 +192,7 @@ sys_page_alloc(envid_t envid, void *va, int perm)
 
 	if ((perm & PTE_U) != PTE_U || (perm & PTE_P) != PTE_P  || (perm & ~PTE_SYSCALL) != 0 )
 		return -E_INVAL;
-	/*if ((perm & ~PTE_SYSCALL) != 0)
-		return -E_INVAL;*/
-
-
-	/*if((perm & (PTE_P | PTE_U)))
-	{
-		
-		int checkperm = ~(PTE_P | PTE_U | PTE_AVAIL | PTE_W);
-		int temp = perm & checkperm;
-		if(temp | ~checkperm)
-			return -E_INVAL;
-	}
-	else
-		return -E_INVAL;*/	
+	
 	struct Env * e;
 	if(!(envid2env(envid, &e, true)))
 	{
@@ -368,7 +355,65 @@ static int
 sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 {
 	// LAB 4: Your code here.
-	panic("sys_ipc_try_send not implemented");
+	struct Env * targetEnv;
+	if (envid2env(envid, &targetEnv, 0))
+		return -E_BAD_ENV;
+
+	if(targetEnv->env_ipc_recving  == 0)
+		return -E_IPC_NOT_RECV;
+
+	if( (uint32_t)srcva < UTOP && ((uint32_t)srcva % PGSIZE != 0))
+	{
+		//cprintf("srcva:%x\n",srcva);
+		return -E_INVAL;
+	}
+	//cprintf("Here\n");
+	
+	//	return -E_INVAL;
+
+	
+
+	// All the sender side checks are done.
+	//Check for page_insert errors now and mark the destination environment ENV_RUNNABLE.
+
+	if((uint32_t)targetEnv->env_ipc_dstva < UTOP && (uint32_t)srcva < UTOP)
+	{
+		//int r;
+
+		if ((perm & PTE_U) != PTE_U || (perm & PTE_P) != PTE_P  || (perm & ~PTE_SYSCALL) != 0 )
+		{
+			//cprintf("Permission failure\n");
+			return -E_INVAL;
+		}	
+		pte_t * pte;
+		struct PageInfo * pp = page_lookup(curenv->env_pgdir, srcva, &pte);
+		if(!pp)
+			return -E_INVAL;
+		if(!(perm & PTE_W && *pte & PTE_W))
+		{
+			//cprintf("Permission failure in write\n");
+			return -E_INVAL;
+		}
+		
+		if((page_insert(targetEnv->env_pgdir, pp, targetEnv->env_ipc_dstva, perm)) < 0)
+			return -E_NO_MEM;	
+		targetEnv->env_ipc_perm = perm;
+	}
+	else
+		targetEnv->env_ipc_perm = 0;
+	
+
+	targetEnv->env_ipc_recving = false;
+	targetEnv->env_ipc_value = value;
+	targetEnv->env_ipc_from = curenv->env_id;
+	targetEnv->env_status = ENV_RUNNABLE;
+	targetEnv->env_tf.tf_regs.reg_eax = 0;
+	return 0;
+
+
+
+
+	//panic("sys_ipc_try_send not implemented");
 }
 
 // Block until a value is ready.  Record that you want to receive
@@ -386,8 +431,22 @@ static int
 sys_ipc_recv(void *dstva)
 {
 	// LAB 4: Your code here.
-	panic("sys_ipc_recv not implemented");
-	return 0;
+	if ((uint32_t) dstva < UTOP) 
+	{
+		if ((uint32_t) dstva % PGSIZE != 0)
+			return -E_INVAL;
+		curenv->env_ipc_dstva = dstva;
+	} 
+	else
+		curenv->env_ipc_dstva = (void *) 0xF0000000;
+		
+	curenv->env_ipc_dstva = dstva;
+	curenv->env_ipc_recving = true;
+	curenv->env_status = ENV_NOT_RUNNABLE;
+	//curenv->env_tf.tf_regs.reg_eax = 0;
+	sched_yield();
+	//panic("sys_ipc_recv not implemented");
+	//return 0;
 }
 
 // Dispatches to the correct kernel function, passing the arguments.
@@ -412,7 +471,7 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		case SYS_getenvid:
 			return sys_getenvid();
 		case SYS_env_destroy:
-			return sys_env_destroy(a2);			
+			return sys_env_destroy(a1);			
 		case SYS_yield:
 			//cprintf("\nIn SYS yield");
 			sys_yield();
@@ -434,6 +493,13 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 			return sys_env_set_status(a1,a2);
 		case SYS_env_set_pgfault_upcall:
 			return sys_env_set_pgfault_upcall(a1, (void *)a2);
+		case SYS_ipc_recv:
+			return sys_ipc_recv((void *)a1);
+			//panic("sys_ipc_recv not implemented.\n");
+			break;
+		case SYS_ipc_try_send:
+			return sys_ipc_try_send(a1, a2, (void *)a3, a4);
+			break;
 		case NSYSCALLS:
 			break;
 		default:
