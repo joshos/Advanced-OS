@@ -56,10 +56,6 @@ sys_env_destroy(envid_t envid)
 	//cprintf("Env Destroy, envid:[%08x]",envid);
 	if ((r = envid2env(envid, &e, 1)) < 0)
 		return r;
-	if (e == curenv)
-		cprintf("[%08x] exiting gracefully\n", curenv->env_id);
-	else
-		cprintf("[%08x] destroying %08x\n", curenv->env_id, e->env_id);
 	env_destroy(e);
 	return 0;
 }
@@ -134,6 +130,31 @@ sys_env_set_status(envid_t envid, int status)
 	else
 		return -E_BAD_ENV;
 	//panic("sys_env_set_status not implemented");
+}
+
+// Set envid's trap frame to 'tf'.
+// tf is modified to make sure that user environments always run at code
+// protection level 3 (CPL 3) with interrupts enabled.
+//
+// Returns 0 on success, < 0 on error.  Errors are:
+//	-E_BAD_ENV if environment envid doesn't currently exist,
+//		or the caller doesn't have permission to change envid.
+static int
+sys_env_set_trapframe(envid_t envid, struct Trapframe *tf)
+{
+	// LAB 5: Your code here.
+	// Remember to check whether the user has supplied us with a good
+	// address!
+	struct Env * e;
+
+	int r;
+	if(envid2env(envid, &e, true))
+		return -E_BAD_ENV;
+	//e->env_tf = tf; 
+	memmove((void *) &e->env_tf, (void *) tf, sizeof(struct Trapframe));
+	return 0;
+
+	//panic("sys_env_set_trapframe not implemented");
 }
 
 // Set the page fault upcall for 'envid' by modifying the corresponding struct
@@ -367,11 +388,6 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 		//cprintf("srcva:%x\n",srcva);
 		return -E_INVAL;
 	}
-	//cprintf("Here\n");
-	
-	//	return -E_INVAL;
-
-	
 
 	// All the sender side checks are done.
 	//Check for page_insert errors now and mark the destination environment ENV_RUNNABLE.
@@ -435,10 +451,10 @@ sys_ipc_recv(void *dstva)
 	{
 		if ((uint32_t) dstva % PGSIZE != 0)
 			return -E_INVAL;
-		curenv->env_ipc_dstva = dstva;
+		//curenv->env_ipc_dstva = dstva;
 	} 
-	else
-		curenv->env_ipc_dstva = (void *) 0xF0000000;
+	//else
+		//curenv->env_ipc_dstva = (void *) 0xF0000000;
 		
 	curenv->env_ipc_dstva = dstva;
 	curenv->env_ipc_recving = true;
@@ -457,6 +473,13 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 	// Return any appropriate return value.
 	// LAB 3: Your code here.
 
+
+	//panic("syscall not implemented");
+
+	/*switch (syscallno) {
+	default:
+		return -E_INVAL;*/
+
 	//panic("syscall not implemented");
 	int env_des;
 	//cprintf("in syscall:%u",syscallno);
@@ -472,38 +495,32 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 			return sys_getenvid();
 		case SYS_env_destroy:
 			return sys_env_destroy(a1);			
-		case SYS_yield:
-			//cprintf("\nIn SYS yield");
+		case SYS_yield:			
 			sys_yield();
 			break;
 		case SYS_page_alloc:
-			return sys_page_alloc((envid_t)a1, (void *)a2, a3);
-			break;
-		case SYS_page_map:
-			
-			return sys_page_map((envid_t)a1, (void *)a2, (envid_t)a3, (void *)a4, a5);
-			break;
+			return sys_page_alloc((envid_t)a1, (void *)a2, a3);			
+		case SYS_page_map:			
+			return sys_page_map((envid_t)a1, (void *)a2, (envid_t)a3, (void *)a4, a5);			
 		case SYS_page_unmap:
-			return sys_page_unmap((envid_t)a1, (void *)a2);
-			break;
+			return sys_page_unmap((envid_t)a1, (void *)a2);			
 		case SYS_exofork:
-			return sys_exofork();
-			break;
+			return sys_exofork();			
 		case SYS_env_set_status:
 			return sys_env_set_status(a1,a2);
 		case SYS_env_set_pgfault_upcall:
 			return sys_env_set_pgfault_upcall(a1, (void *)a2);
 		case SYS_ipc_recv:
-			return sys_ipc_recv((void *)a1);
-			//panic("sys_ipc_recv not implemented.\n");
-			break;
+			return sys_ipc_recv((void *)a1);			
 		case SYS_ipc_try_send:
 			return sys_ipc_try_send(a1, a2, (void *)a3, a4);
-			break;
+		case SYS_env_set_trapframe:
+			return sys_env_set_trapframe(a1, (struct Trapframe *)a2);		
 		case NSYSCALLS:
 			break;
 		default:
-			return -E_NO_SYS;
+			return -E_INVAL;
+
 	}
 	return 0;
 }

@@ -270,6 +270,9 @@ trap_dispatch(struct Trapframe *tf)
 	// interrupt using lapic_eoi() before calling the scheduler!
 	// LAB 4: Your code here.
 
+
+	
+
 	uint32_t syscallNO, a1, a2, a3, a4, a5;
 	switch(tf->tf_trapno)
 	{
@@ -305,6 +308,16 @@ trap_dispatch(struct Trapframe *tf)
 			lapic_eoi();
 			sched_yield();
 			break;
+		// Handle keyboard and serial interrupts.
+		// LAB 5: Your code here.
+		case (IRQ_OFFSET+IRQ_KBD):
+			//cprintf("in kbd");
+			kbd_intr();
+			break;
+		case (IRQ_OFFSET+IRQ_SERIAL):
+			//cprintf("in serial");
+			serial_intr();
+			break;
 		default:
 			cprintf("\nIn default trap case. The code should not reach here");
 			print_trapframe(tf);
@@ -316,7 +329,7 @@ trap_dispatch(struct Trapframe *tf)
 				return;
 			}
 	}	
-	
+
 
 	// Unexpected trap: The user process or the kernel has a bug.
 	
