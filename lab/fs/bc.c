@@ -90,7 +90,7 @@ flush_block(void *addr)
 	{
 		addr = ROUNDDOWN(addr, PGSIZE);
 		if((r = ide_write(blockno*BLKSECTS, addr, BLKSECTS)) < 0)
-			return r;
+			panic("in ide_write:%e",r);
 		if ((r = sys_page_map(0, addr, 0, addr, uvpt[PGNUM(addr)] & PTE_SYSCALL)) < 0)  //call to remove the PTE_D flag from the pte.
 			panic("in flush_block, sys_page_map: %e", r);
 	}
