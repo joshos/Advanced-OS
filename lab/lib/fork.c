@@ -17,7 +17,7 @@ extern void _pgfault_upcall(void);
 static void
 pgfault(struct UTrapframe *utf)
 {
-	void *addr = (void *) utf->utf_fault_va;
+	/*void *addr = (void *) utf->utf_fault_va;
 	uint32_t err = utf->utf_err;
 	int r;
 
@@ -46,10 +46,8 @@ pgfault(struct UTrapframe *utf)
 	
 	if ((r = sys_page_map(0, PFTEMP, 0, ROUNDDOWN(addr,PGSIZE), PTE_P|PTE_U|PTE_W)) < 0)
 		panic("sys_page_map: %e", r);
-	if((r = sys_page_unmap(0, PFTEMP))<0)
-		panic("sys_page_unmap:%e",r);
-	// LAB 4: Your code here.
-	/*void *addr = (void *) utf->utf_fault_va;
+	// LAB 4: Your code here.*/
+	void *addr = (void *) utf->utf_fault_va;
 	uint32_t err = utf->utf_err;
 	int r;
 	//cprintf("%d\n",err);
@@ -81,7 +79,7 @@ pgfault(struct UTrapframe *utf)
 	if(r<0)
 		panic("sys_page_alloc: %e", r);
 
-	//panic("pgfault not implemented");*/
+	//panic("pgfault not implemented");
 }
 
 //
@@ -102,7 +100,12 @@ duppage(envid_t envid, unsigned pn)
 	uint32_t addr = pn*PGSIZE;
 	
 	uint32_t pgnum = PGNUM(addr);
-	if(uvpt[pgnum] & PTE_W || uvpt[pgnum] & PTE_COW)
+	if (uvpt[pn] & PTE_SHARE) 
+	{
+		if ((r = sys_page_map(0, (void *) addr, envid, (void *) addr, uvpt[pn] & PTE_SYSCALL)) < 0)
+			panic("sys_page_map: %e\n", r);
+	}
+	else if(uvpt[pgnum] & PTE_W || uvpt[pgnum] & PTE_COW)
 	{
 		//cprintf("\nPage is COW and Write");
 		if ((r = sys_page_map(0, (void *)addr, envid, (void *)addr, PTE_P|PTE_U|PTE_COW)) < 0)
@@ -158,7 +161,7 @@ fork(void)
 	uint32_t pg;
 	for(pg = 0; pg < PGNUM(UTOP-PGSIZE);pg++)
 	{
-		uint32_t pdx = ROUNDDOWN(pg, 1024) / 1024;
+		uint32_t pdx = ROUNDDOWN(pg, NPDENTRIES) / NPDENTRIES;
 		if ((uvpd[pdx] & PTE_P) == PTE_P && ((uvpt[pg] & PTE_P) == PTE_P)) 
 		//if((uvpd[PDX(pdx)] & PTE_P) && (uvpt[pg] & PTE_P))
 		{
