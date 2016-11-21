@@ -89,7 +89,8 @@ flush_block(void *addr)
 	if(va_is_mapped(addr) && va_is_dirty(addr))
 	{
 		addr = ROUNDDOWN(addr, PGSIZE);
-		ide_write(blockno*BLKSECTS, addr, BLKSECTS);
+		if((r = ide_write(blockno*BLKSECTS, addr, BLKSECTS)) < 0)
+			return r;
 		if ((r = sys_page_map(0, addr, 0, addr, uvpt[PGNUM(addr)] & PTE_SYSCALL)) < 0)  //call to remove the PTE_D flag from the pte.
 			panic("in flush_block, sys_page_map: %e", r);
 	}
