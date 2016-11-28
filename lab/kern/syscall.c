@@ -153,6 +153,8 @@ sys_env_set_trapframe(envid_t envid, struct Trapframe *tf)
 		return -E_BAD_ENV;
 	//e->env_tf = tf; 
 	memmove((void *) &e->env_tf, (void *) tf, sizeof(struct Trapframe));
+	e->env_tf.tf_cs |= 3;
+	e->env_tf.tf_eflags |= FL_IF;
 	return 0;
 
 	//panic("sys_env_set_trapframe not implemented");
