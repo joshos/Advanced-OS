@@ -11,6 +11,7 @@
 #include <kern/syscall.h>
 #include <kern/console.h>
 #include <kern/sched.h>
+#include <kern/time.h>
 
 // Print a string to the system console.
 // The string is exactly 'len' characters long.
@@ -425,10 +426,6 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 	targetEnv->env_status = ENV_RUNNABLE;
 	targetEnv->env_tf.tf_regs.reg_eax = 0;
 	return 0;
-
-
-
-
 	//panic("sys_ipc_try_send not implemented");
 }
 
@@ -451,36 +448,29 @@ sys_ipc_recv(void *dstva)
 	{
 		if ((uint32_t) dstva % PGSIZE != 0)
 			return -E_INVAL;
-		//curenv->env_ipc_dstva = dstva;
 	} 
-	//else
-		//curenv->env_ipc_dstva = (void *) 0xF0000000;
-		
+			
 	curenv->env_ipc_dstva = dstva;
 	curenv->env_ipc_recving = true;
-	curenv->env_status = ENV_NOT_RUNNABLE;
-	//curenv->env_tf.tf_regs.reg_eax = 0;
-	sched_yield();
-	//panic("sys_ipc_recv not implemented");
-	//return 0;
+	curenv->env_status = ENV_NOT_RUNNABLE;	
+	
+	sched_yield();	
+}
+
+// Return the current time.
+static int
+sys_time_msec(void)
+{
+	// LAB 6: Your code here.
+	return time_msec();
+	//panic("sys_time_msec not implemented");
 }
 
 // Dispatches to the correct kernel function, passing the arguments.
 int32_t
 syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
 {
-	// Call the function corresponding to the 'syscallno' parameter.
-	// Return any appropriate return value.
-	// LAB 3: Your code here.
-
-
-	//panic("syscall not implemented");
-
-	/*switch (syscallno) {
-	default:
-		return -E_INVAL;*/
-
-	//panic("syscall not implemented");
+	
 	int env_des;
 	//cprintf("in syscall:%u",syscallno);
 	switch (syscallno) 
@@ -515,7 +505,9 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		case SYS_ipc_try_send:
 			return sys_ipc_try_send(a1, a2, (void *)a3, a4);
 		case SYS_env_set_trapframe:
-			return sys_env_set_trapframe(a1, (struct Trapframe *)a2);		
+			return sys_env_set_trapframe(a1, (struct Trapframe *)a2);
+		case SYS_time_msec:
+			return sys_time_msec();	
 		case NSYSCALLS:
 			break;
 		default:

@@ -13,6 +13,7 @@
 #include <kern/picirq.h>
 #include <kern/cpu.h>
 #include <kern/spinlock.h>
+#include <kern/time.h>
 
 static struct Taskstate ts;
 
@@ -266,13 +267,6 @@ trap_dispatch(struct Trapframe *tf)
 		return;
 	}
 
-	// Handle clock interrupts. Don't forget to acknowledge the
-	// interrupt using lapic_eoi() before calling the scheduler!
-	// LAB 4: Your code here.
-
-
-	
-
 	uint32_t syscallNO, a1, a2, a3, a4, a5;
 	switch(tf->tf_trapno)
 	{
@@ -285,13 +279,7 @@ trap_dispatch(struct Trapframe *tf)
 			break;
 		case T_SYSCALL:
 			
-			/*asm volatile("movl %%eax,%0" : "=r" (syscallNO));
-			asm volatile("movl %%edx,%0" : "=r" (a1));
-			asm volatile("movl %%ecx,%0" : "=r" (a2));
-			asm volatile("movl %%ebx,%0" : "=r" (a3));
-			asm volatile("movl %%edi,%0" : "=r" (a4));
-			asm volatile("movl %%esi,%0" : "=r" (a5));*/
-			//cprintf("In Trap Dispatch, eax val: %u",tf->tf_regs.reg_eax);
+			
 			syscallNO = tf->tf_regs.reg_eax;
 			a1 = tf->tf_regs.reg_edx;
 			a2 = tf->tf_regs.reg_ecx;
@@ -303,9 +291,14 @@ trap_dispatch(struct Trapframe *tf)
 		// Handle clock interrupts. Don't forget to acknowledge the
 		// interrupt using lapic_eoi() before calling the scheduler!
 		// LAB 4: Your code here.
+		// Add time tick increment to clock interrupts.
+		// Be careful! In multiprocessors, clock interrupts are
+		// triggered on every CPU.
+		// LAB 6: Your code here.
 		case IRQ_OFFSET+IRQ_TIMER:
 			//cprintf("In timer interrupt case\n");
 			lapic_eoi();
+			time_tick();
 			sched_yield();
 			break;
 		// Handle keyboard and serial interrupts.
@@ -329,10 +322,6 @@ trap_dispatch(struct Trapframe *tf)
 				return;
 			}
 	}	
-
-
-	// Unexpected trap: The user process or the kernel has a bug.
-	
 }
 
 void
